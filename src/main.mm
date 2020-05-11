@@ -26,7 +26,7 @@ static NSData *base64helper(NSData *input, SecTransformRef transform)
     return [output autorelease];
 }
 
-Napi::String TakeScreenshot(const Napi::Env env) {
+Napi::String TakeScreenshot(const Napi::Env& env) {
     CGImageRef screenShot = CGWindowListCreateImage( CGRectInfinite, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);
     NSBitmapImageRep* bitmapImageRep = [[NSBitmapImageRep alloc]initWithCGImage:screenShot];
     NSData *imgData = [bitmapImageRep representationUsingType:NSPNGFileType properties: [NSMutableDictionary dictionary]];
