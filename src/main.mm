@@ -36,7 +36,6 @@ Napi::String TakeScreenshot(const Napi::Env env) {
     NSString* base64Result = [[NSString alloc] initWithData:base64helper(imgData, transform) encoding:NSASCIIStringEncoding];
     Napi::String ret = Napi::String::New(env, [base64Result UTF8String]);
 
-    // CFRelease(transform);
     CFRelease(screenShot);
     [base64Result release];
     [imgData release];
