@@ -21,9 +21,14 @@
                     "libraries": [
                         "-framework CoreGraphics",
                         "-framework CoreFoundation",
-                        "-framework ImageIO"
+                        "-framework ImageIO",
+                        "-framework Security",
+                        "-framework AppKit"
                     ]
-                }
+                },
+                "sources": [
+                    "src/main.mm"
+                ],
                 }
             ]
         ]
