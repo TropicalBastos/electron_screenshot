@@ -29,9 +29,7 @@ static NSData *base64helper(NSData *input, SecTransformRef transform)
 Napi::String TakeScreenshot(const Napi::Env env) {
     CGImageRef screenShot = CGWindowListCreateImage( CGRectInfinite, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);
     NSBitmapImageRep* bitmapImageRep = [[NSBitmapImageRep alloc]initWithCGImage:screenShot];
-    NSImage *image = [[NSImage alloc] init];
-    [image addRepresentation:bitmapImageRep];
-    NSData *imgData = [image TIFFRepresentation];
+    NSData *imgData = [bitmapImageRep representationUsingType:NSPNGFileType properties: [NSMutableDictionary dictionary]];
     SecTransformRef transform = SecEncodeTransformCreate(kSecBase64Encoding, NULL);
     NSString* base64Result = [[NSString alloc] initWithData:base64helper(imgData, transform) encoding:NSASCIIStringEncoding];
     Napi::String ret = Napi::String::New(env, [base64Result UTF8String]);
@@ -39,7 +37,6 @@ Napi::String TakeScreenshot(const Napi::Env env) {
     CFRelease(screenShot);
     [base64Result release];
     [imgData release];
-    [image release];
     [bitmapImageRep release];
 
     return ret;
