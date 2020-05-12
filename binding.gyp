@@ -30,6 +30,21 @@
                     "src/main.mm"
                 ],
                 }
+            ],
+            [
+                "OS=='linux'", {
+                "link_settings": {
+                    "libraries": [
+                        "-lX11",
+                        "-lpng",
+                        "-lz",
+                    ]
+                },
+                "sources": [
+                    "src/main.cpp",
+                    "src/lodepng/lodepng.cpp",
+                ],
+                }
             ]
         ]
     }]

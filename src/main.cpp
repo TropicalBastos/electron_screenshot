@@ -10,7 +10,9 @@
   #include "wingdi.h"
   #include "Gdiplus.h"
 #else
-  // TODO
+  #include <X11/Xlib.h>
+  #include <X11/Xutil.h>
+  #include "lodepng/lodepng.h"
 #endif
 
 namespace electron_screenshot
@@ -80,12 +82,41 @@ Napi::String TakeScreenshot(const Napi::Env& env) {
   DeleteDC(hScreenDC);
   DeleteObject(hOldBitmap);
   DeleteObject(hBitmap);
-  delete buffer;
+  free(buffer);
 
   return Napi::String::New(env, macaron::Base64::Encode(result));
 
 #else
-  // TODO
+  Display* display = XOpenDisplay(nullptr);
+  Window root = DefaultRootWindow(display);
+
+  XWindowAttributes attributes = {0};
+  XGetWindowAttributes(display, root, &attributes);
+
+  int width = attributes.width;
+  int height = attributes.height;
+
+  XImage* img = XGetImage(display, root, 0, 0 , width, height, AllPlanes, ZPixmap);
+  int bpp = img->bits_per_pixel;
+
+  size_t len = width * height * 4;
+  unsigned char* buffer = (unsigned char*) malloc(len);
+  memcpy(buffer, img->data, len);
+
+  unsigned char* output;
+  size_t outsize;
+  int colorType = 2;
+  int bitDepth = 8;
+  lodepng_encode_memory(&output, &outsize, buffer, width, height, colorType, bitDepth);
+
+  std::string result(reinterpret_cast<char*>(output), outsize);
+
+  XDestroyImage(img);
+  XCloseDisplay(display);
+  free(buffer);
+  free(output); 
+
+  return Napi::String::New(env, macaron::Base64::Encode(result));
 #endif
 }
 
