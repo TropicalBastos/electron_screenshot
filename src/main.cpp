@@ -8,7 +8,8 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
   #include "Windows.h"
   #include "wingdi.h"
-  #include "Gdiplus.h"
+  #include <gdiplus.h>
+  #include "objidl.h"
 #else
   #include <X11/Xlib.h>
   #include <X11/Xutil.h>
@@ -19,6 +20,38 @@ namespace electron_screenshot
 {
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
+{
+  using namespace Gdiplus;
+  UINT  num = 0;          // number of image encoders
+  UINT  size = 0;         // size of the image encoder array in bytes
+
+  ImageCodecInfo* pImageCodecInfo = NULL;
+
+  GetImageEncodersSize(&num, &size);
+  if(size == 0)
+    return -1;  // Failure
+
+  pImageCodecInfo = (ImageCodecInfo*)(malloc(size));
+  if(pImageCodecInfo == NULL)
+    return -1;  // Failure
+
+  GetImageEncoders(num, size, pImageCodecInfo);
+
+  for(UINT j = 0; j < num; ++j)
+  {
+    if( wcscmp(pImageCodecInfo[j].MimeType, format) == 0 )
+    {
+      *pClsid = pImageCodecInfo[j].Clsid;
+      free(pImageCodecInfo);
+      return j;  // Success
+    }    
+  }
+
+  free(pImageCodecInfo);
+  return -1;  // Failure
+}
+
 bool BitmapToPng(HBITMAP hbitmap, BYTE* data, int* len)
 {
     Gdiplus::Bitmap bmp(hbitmap, nullptr);
@@ -28,8 +61,9 @@ bool BitmapToPng(HBITMAP hbitmap, BYTE* data, int* len)
     CreateStreamOnHGlobal(NULL, TRUE, &istream);
 
     CLSID clsid_png;
-    CLSIDFromString(L"{557cf406-1a04-11d3-9a73-0000f81ef32e}", &clsid_png);
-    Gdiplus::Status status = bmp.Save(istream, &clsid_png);
+    GetEncoderClsid(L"image/png", &clsid_png);
+    Gdiplus::Status status = bmp.Save(istream, &clsid_png, NULL);
+
     if(status != Gdiplus::Status::Ok)
         return false;
 
@@ -44,6 +78,7 @@ bool BitmapToPng(HBITMAP hbitmap, BYTE* data, int* len)
     //lock & unlock memory
     LPVOID pimage = GlobalLock(hg);
     memcpy(data, pimage, bufsize);
+ 
     GlobalUnlock(hg);
 
     istream->Release();
@@ -55,6 +90,11 @@ bool BitmapToPng(HBITMAP hbitmap, BYTE* data, int* len)
 
 Napi::String TakeScreenshot(const Napi::Env& env) {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+  // Initialize GDI+.
+  Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+  ULONG_PTR gdiplusToken;
+  Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
   // get the device context of the screen
   HDC hScreenDC = CreateDC("DISPLAY", NULL, NULL, NULL);     
   // and a device context to put it in
@@ -83,6 +123,8 @@ Napi::String TakeScreenshot(const Napi::Env& env) {
   DeleteObject(hOldBitmap);
   DeleteObject(hBitmap);
   free(buffer);
+
+  Gdiplus::GdiplusShutdown(gdiplusToken);
 
   return Napi::String::New(env, macaron::Base64::Encode(result));
 

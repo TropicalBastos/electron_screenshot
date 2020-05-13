@@ -45,6 +45,18 @@
                     "src/lodepng/lodepng.cpp",
                 ],
                 }
+            ],
+            [
+                "OS=='win'", {
+                "link_settings": {
+                    "libraries": [
+                        "-lgdiplus",
+                    ]
+                },
+                "sources": [
+                    "src/main.cpp",
+                ],
+                }
             ]
         ]
     }]
