@@ -72,47 +72,43 @@ class Base64 {
     return ret;
   }
 
-  std::string EncodeRaw(unsigned char const* bytes_to_encode, unsigned int in_len) {
-    std::string ret;
-    int i = 0;
-    int j = 0;
-    unsigned char char_array_3[3];
-    unsigned char char_array_4[4];
+  static std::string EncodeRaw(unsigned char const* data, unsigned int in_len) {
+    static constexpr char sEncodingTable[] = {
+      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+      'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+      'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+      'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+      'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+      'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+      'w', 'x', 'y', 'z', '0', '1', '2', '3',
+      '4', '5', '6', '7', '8', '9', '+', '/'
+    };
 
-    while (in_len--) {
-      char_array_3[i++] = *(bytes_to_encode++);
-      if (i == 3) {
-        char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-        char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-        char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-        char_array_4[3] = char_array_3[2] & 0x3f;
+    size_t out_len = 4 * ((in_len + 2) / 3);
+    std::string ret(out_len, '\0');
+    size_t i;
+    char *p = const_cast<char*>(ret.c_str());
 
-        for(i = 0; (i <4) ; i++)
-          ret += base64_chars[char_array_4[i]];
-        i = 0;
-      }
+    for (i = 0; i < in_len - 2; i += 3) {
+      *p++ = sEncodingTable[(data[i] >> 2) & 0x3F];
+      *p++ = sEncodingTable[((data[i] & 0x3) << 4) | ((int) (data[i + 1] & 0xF0) >> 4)];
+      *p++ = sEncodingTable[((data[i + 1] & 0xF) << 2) | ((int) (data[i + 2] & 0xC0) >> 6)];
+      *p++ = sEncodingTable[data[i + 2] & 0x3F];
     }
-
-    if (i)
-    {
-      for(j = i; j < 3; j++)
-        char_array_3[j] = '\0';
-
-      char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-      char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-      char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-      char_array_4[3] = char_array_3[2] & 0x3f;
-
-      for (j = 0; (j < i + 1); j++)
-        ret += base64_chars[char_array_4[j]];
-
-      while((i++ < 3))
-        ret += '=';
-
+    if (i < in_len) {
+      *p++ = sEncodingTable[(data[i] >> 2) & 0x3F];
+      if (i == (in_len - 1)) {
+        *p++ = sEncodingTable[((data[i] & 0x3) << 4)];
+        *p++ = '=';
+      }
+      else {
+        *p++ = sEncodingTable[((data[i] & 0x3) << 4) | ((int) (data[i + 1] & 0xF0) >> 4)];
+        *p++ = sEncodingTable[((data[i + 1] & 0xF) << 2)];
+      }
+      *p++ = '=';
     }
 
     return ret;
-
   }
 
   static std::string Decode(const std::string& input, std::string& out) {
