@@ -72,43 +72,58 @@ class Base64 {
     return ret;
   }
 
-  static std::string EncodeRaw(unsigned char const* data, unsigned int in_len) {
-    static constexpr char sEncodingTable[] = {
-      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
-      'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-      'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-      'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-      'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-      'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-      'w', 'x', 'y', 'z', '0', '1', '2', '3',
-      '4', '5', '6', '7', '8', '9', '+', '/'
-    };
+  static size_t b64_encoded_size(size_t inlen)
+  {
+    size_t ret;
 
-    size_t out_len = 4 * ((in_len + 2) / 3);
-    std::string ret(out_len, '\0');
-    size_t i;
-    char *p = const_cast<char*>(ret.c_str());
-
-    for (i = 0; i < in_len - 2; i += 3) {
-      *p++ = sEncodingTable[(data[i] >> 2) & 0x3F];
-      *p++ = sEncodingTable[((data[i] & 0x3) << 4) | ((int) (data[i + 1] & 0xF0) >> 4)];
-      *p++ = sEncodingTable[((data[i + 1] & 0xF) << 2) | ((int) (data[i + 2] & 0xC0) >> 6)];
-      *p++ = sEncodingTable[data[i + 2] & 0x3F];
-    }
-    if (i < in_len) {
-      *p++ = sEncodingTable[(data[i] >> 2) & 0x3F];
-      if (i == (in_len - 1)) {
-        *p++ = sEncodingTable[((data[i] & 0x3) << 4)];
-        *p++ = '=';
-      }
-      else {
-        *p++ = sEncodingTable[((data[i] & 0x3) << 4) | ((int) (data[i + 1] & 0xF0) >> 4)];
-        *p++ = sEncodingTable[((data[i + 1] & 0xF) << 2)];
-      }
-      *p++ = '=';
-    }
+    ret = inlen;
+    if (inlen % 3 != 0)
+      ret += 3 - (inlen % 3);
+    ret /= 3;
+    ret *= 4;
 
     return ret;
+  }
+
+  static std::string EncodeRaw(const unsigned char *in, size_t len)
+  {
+    const char b64chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    char   *out;
+    size_t  elen;
+    size_t  i;
+    size_t  j;
+    size_t  v;
+
+    if (in == NULL || len == 0)
+      return NULL;
+
+    elen = b64_encoded_size(len);
+    out  = (char*) malloc(elen+1);
+    out[elen] = '\0';
+
+    for (i=0, j=0; i<len; i+=3, j+=4) {
+      v = in[i];
+      v = i+1 < len ? v << 8 | in[i+1] : v << 8;
+      v = i+2 < len ? v << 8 | in[i+2] : v << 8;
+
+      out[j]   = b64chars[(v >> 18) & 0x3F];
+      out[j+1] = b64chars[(v >> 12) & 0x3F];
+      if (i+1 < len) {
+        out[j+2] = b64chars[(v >> 6) & 0x3F];
+      } else {
+        out[j+2] = '=';
+      }
+      if (i+2 < len) {
+        out[j+3] = b64chars[v & 0x3F];
+      } else {
+        out[j+3] = '=';
+      }
+    }
+
+    std::string outString(out);
+    free(out);
+    
+    return outString;
   }
 
   static std::string Decode(const std::string& input, std::string& out) {
