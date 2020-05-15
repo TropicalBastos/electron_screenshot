@@ -1,6 +1,6 @@
 {
   "name": "electron-base64-screenshot",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Take screenshots natively and have it base64 ready",
   "main": "index.js",
   "gypfile": true,
