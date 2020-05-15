@@ -1,6 +1,6 @@
 {
   "name": "electron-base64-screenshot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Take screenshots natively and have it base64 ready",
   "main": "index.js",
   "gypfile": true,
@@ -10,9 +10,8 @@
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {
+  "dependencies": {
     "node-addon-api": "^1.7.1",
     "node-gyp": "^3.7.0"
-  },
-  "dependencies": {}
+  }
 }
