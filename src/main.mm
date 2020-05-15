@@ -23,7 +23,7 @@ static NSData *base64helper(NSData *input, SecTransformRef transform)
 
     CFRelease(transform);
 
-    return output;
+    return [output autorelease];
 }
 
 Napi::String TakeScreenshot(const Napi::Env& env) {
