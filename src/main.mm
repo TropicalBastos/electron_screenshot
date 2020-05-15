@@ -36,7 +36,6 @@ Napi::String TakeScreenshot(const Napi::Env& env) {
 
     CFRelease(screenShot);
     [base64Result release];
-    [imgData release];
     [bitmapImageRep release];
 
     return ret;
