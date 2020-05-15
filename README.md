@@ -11,7 +11,7 @@ The module uses native code bindings for more performant output of base64 encode
 
 ## Usage
 ```javascript
-const electronScreenshot = require('electron-screenshot');
+const electronScreenshot = require('electron-base64-screenshot');
 
 let base64 = electronScreenshot.takeScreenshot();
 ```

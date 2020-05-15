@@ -1,5 +1,5 @@
 {
-  "name": "electron-screenshot",
+  "name": "electron-base64-screenshot",
   "version": "1.0.0",
   "description": "Take screenshots natively and have it base64 ready",
   "main": "index.js",
