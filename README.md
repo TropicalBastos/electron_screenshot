@@ -17,3 +17,7 @@ let base64 = electronScreenshot.takeScreenshot();
 ```
 
 It's that simple!
+
+## Note
+
+Because of this being a native module, one would need to call this function in the main process of electron. If you want to take a screenshot as a result of a UI driven event ```ipcRenderer``` and ```ipcMain``` are your best friends.
