@@ -1,6 +1,6 @@
 # Electron Screenshot
 
-Electron/Node module for taking screenshots from the current device context. Simply call ```takeScreenshot``` and the return value is the base64 encoded png value of the screen. Platforms currently supported and working are:
+Electron/Node module for taking screenshots from the current device context. Simply call ```takeScreenshot``` and the returned value will be the base64 encoded png value of the screen. Platforms currently supported and working are:
 
 - Windows
 - macOS
