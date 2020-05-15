@@ -52,7 +52,7 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
   return -1;  // Failure
 }
 
-bool BitmapToPng(HBITMAP hbitmap, BYTE* data, int* len)
+bool BitmapToBase64Png(HBITMAP hbitmap, std::string& outstring)
 {
     Gdiplus::Bitmap bmp(hbitmap, nullptr);
 
@@ -71,19 +71,19 @@ bool BitmapToPng(HBITMAP hbitmap, BYTE* data, int* len)
     HGLOBAL hg = NULL;
     GetHGlobalFromStream(istream, &hg);
 
-    //copy IStream to buffer
     int bufsize = GlobalSize(hg);
-    data = (BYTE*) malloc(bufsize);
 
     //lock & unlock memory
-    LPVOID pimage = GlobalLock(hg);
-    memcpy(data, pimage, bufsize);
- 
+    BYTE* pimage = (BYTE*) GlobalLock(hg);
+
+    // create string from data buffer in memory before unlocking memory
+    std::string result(reinterpret_cast<char*>(pimage), bufsize);
+
     GlobalUnlock(hg);
 
     istream->Release();
 
-    *len = bufsize;
+    outstring = macaron::Base64::Encode(result);
     return true;
 }
 #endif
@@ -111,22 +111,22 @@ Napi::String TakeScreenshot(const Napi::Env& env) {
 
   BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, 0, 0, SRCCOPY);
   hBitmap = (HBITMAP) SelectObject(hMemoryDC, hOldBitmap);
-
-  BYTE* buffer;
-  int len;
-  BitmapToPng(hBitmap, buffer, &len);
-  std::string result(reinterpret_cast<char*>(buffer), len);
+  std::string base64Image;
+  
+  if (!BitmapToBase64Png(hBitmap, base64Image)) {
+    std::cerr << "Error in decoding PNG from bitmap screenshot" << std::endl;
+    return Napi::String::New(env, "");
+  }
 
   //cleanup
   DeleteDC(hMemoryDC);
   DeleteDC(hScreenDC);
   DeleteObject(hOldBitmap);
   DeleteObject(hBitmap);
-  free(buffer);
 
   Gdiplus::GdiplusShutdown(gdiplusToken);
 
-  return Napi::String::New(env, macaron::Base64::Encode(result));
+  return Napi::String::New(env, base64Image);
 
 #else
   Display* display = XOpenDisplay(nullptr);
