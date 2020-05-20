@@ -9,6 +9,10 @@ Support for Linux is under development.
 
 The module uses native code bindings for more performant output of base64 encoded screenshots, see below for usage.
 
+## Installation
+
+```npm install electron-base64-screenshot --save```
+
 ## Usage
 ```javascript
 const electronScreenshot = require('electron-base64-screenshot');
